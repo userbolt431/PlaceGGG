@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Send, ChevronRight, ChevronLeft, MessageCircle, ThumbsUp, Share2, MoreHorizontal, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Send, ChevronRight, ChevronLeft, MessageCircle, ThumbsUp, Share2, MoreHorizontal, HelpCircle, ChevronDown, ChevronUp, Bot } from 'lucide-react';
 
 interface Agent {
   id: string;
@@ -259,6 +259,7 @@ const ChatbotPage: React.FC = () => {
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [isTopicExpanded, setIsTopicExpanded] = useState(false);
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
+  const [chatbotTopic, setChatbotTopic] = useState<string | null>(null);
 
   const handleSendMessage = () => {
     if (!inputMessage.trim()) return;
@@ -274,9 +275,20 @@ const ChatbotPage: React.FC = () => {
     setInputMessage('');
 
     setTimeout(() => {
+      let responseText = '';
+      if (chatbotTopic) {
+        responseText = `I'm here to help you with questions about ${chatbotTopic}. ${inputMessage.includes('?') ? 'Let me provide you with detailed information about that.' : 'What specific aspect would you like to know more about?'}`;
+      } else if (selectedAgent && selectedAbility) {
+        responseText = `This is a response from ${selectedAgent.name} about ${selectedAbility}. How can I assist you further?`;
+      } else if (selectedAgent) {
+        responseText = `Hello! I'm ${selectedAgent.name}. I can help you with ${selectedAgent.abilities.join(', ')}. What would you like to know?`;
+      } else {
+        responseText = 'Hello! Please select an AI agent or topic to get started with your questions.';
+      }
+
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: `This is a response from ${selectedAgent?.name || 'the bot'} about ${selectedAbility || 'general topics'}`,
+        text: responseText,
         sender: 'bot',
         timestamp: new Date()
       };
@@ -291,16 +303,34 @@ const ChatbotPage: React.FC = () => {
       setExpandedAgent(agent.id);
       setSelectedAgent(agent);
       setSelectedAbility(null);
+      setChatbotTopic(null); // Clear topic when selecting agent
     }
   };
 
   const handleAbilityClick = (ability: string) => {
     setSelectedAbility(ability);
+    setChatbotTopic(null); // Clear topic when selecting ability
   };
 
   const handleTopicClick = (topic: string) => {
     setSelectedTopic(topic);
     setIsTopicExpanded(true);
+  };
+
+  const handleChatbotTopicClick = (topic: string) => {
+    setChatbotTopic(topic);
+    setSelectedAgent(null);
+    setSelectedAbility(null);
+    setExpandedAgent(null);
+    
+    // Add a welcome message for the topic
+    const welcomeMessage: Message = {
+      id: Date.now().toString(),
+      text: `I'm now ready to help you with questions about ${topic}. Feel free to ask me anything that wasn't covered in the FAQ section!`,
+      sender: 'bot',
+      timestamp: new Date()
+    };
+    setMessages([welcomeMessage]);
   };
 
   const toggleFAQ = (faqId: string) => {
@@ -324,12 +354,23 @@ const ChatbotPage: React.FC = () => {
     return (
       <div className="p-4">
         <div className="mb-6">
-          <h3 className="text-xl font-semibold text-slate-800 mb-2">
-            {selectedTopic} - Frequently Asked Questions
-          </h3>
-          <p className="text-slate-600 text-sm">
-            Find answers to common questions about {selectedTopic.toLowerCase()}.
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                {selectedTopic} - Frequently Asked Questions
+              </h3>
+              <p className="text-slate-600 text-sm">
+                Find answers to common questions about {selectedTopic.toLowerCase()}.
+              </p>
+            </div>
+            <button
+              onClick={() => handleChatbotTopicClick(selectedTopic)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Bot size={18} />
+              <span>Ask Chatbot</span>
+            </button>
+          </div>
         </div>
 
         {categories.map(category => (
@@ -436,7 +477,15 @@ const ChatbotPage: React.FC = () => {
       }`}>
         {/* Chat Header */}
         <div className="h-16 bg-white border-b border-slate-200 flex items-center px-6">
-          {selectedAgent ? (
+          {chatbotTopic ? (
+            <div className="flex items-center">
+              <Bot size={24} className="text-blue-600 mr-3" />
+              <div>
+                <div className="font-medium text-slate-800">Topic Assistant</div>
+                <div className="text-sm text-slate-500">Helping with {chatbotTopic}</div>
+              </div>
+            </div>
+          ) : selectedAgent ? (
             <div className="flex items-center">
               <img 
                 src={selectedAgent.avatar} 
@@ -451,7 +500,7 @@ const ChatbotPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <span className="text-slate-500">Select an AI agent to start chatting</span>
+            <span className="text-slate-500">Select an AI agent or use topic chatbot</span>
           )}
         </div>
 
@@ -483,7 +532,7 @@ const ChatbotPage: React.FC = () => {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              placeholder="Type your message..."
+              placeholder={chatbotTopic ? `Ask about ${chatbotTopic}...` : "Type your message..."}
               className="flex-1 px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <button

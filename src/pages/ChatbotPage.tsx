@@ -16,20 +16,6 @@ interface Message {
   timestamp: Date;
 }
 
-interface TopicThread {
-  id: string;
-  title: string;
-  author: {
-    name: string;
-    avatar: string;
-    role: string;
-  };
-  content: string;
-  likes: number;
-  replies: number;
-  timestamp: string;
-}
-
 interface FAQ {
   id: string;
   question: string;
@@ -85,52 +71,6 @@ const topics = [
   'Support',
   'News'
 ];
-
-const sampleThreads: Record<string, TopicThread[]> = {
-  'Forum': [
-    {
-      id: '1',
-      title: 'Best practices for event planning',
-      author: {
-        name: 'Sarah Chen',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=sarah',
-        role: 'Event Planner'
-      },
-      content: 'I\'ve been organizing events for 5 years and wanted to share some key insights...',
-      likes: 124,
-      replies: 45,
-      timestamp: '2 hours ago'
-    },
-    {
-      id: '2',
-      title: 'How to choose the perfect venue',
-      author: {
-        name: 'Michael Ross',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=michael',
-        role: 'Venue Coordinator'
-      },
-      content: 'The venue sets the tone for your entire event. Here\'s what to consider...',
-      likes: 89,
-      replies: 32,
-      timestamp: '4 hours ago'
-    }
-  ],
-  'Support': [
-    {
-      id: '3',
-      title: 'Common issues and solutions',
-      author: {
-        name: 'Tech Support Team',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=support',
-        role: 'Support Specialist'
-      },
-      content: 'Here are the most common issues users face and how to resolve them...',
-      likes: 156,
-      replies: 78,
-      timestamp: '1 day ago'
-    }
-  ]
-};
 
 const topicFAQs: Record<string, FAQ[]> = {
   'Forum': [
@@ -318,7 +258,6 @@ const ChatbotPage: React.FC = () => {
   const [expandedAgent, setExpandedAgent] = useState<string | null>(null);
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [isTopicExpanded, setIsTopicExpanded] = useState(false);
-  const [viewMode, setViewMode] = useState<'threads' | 'faq'>('faq');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
 
   const handleSendMessage = () => {
@@ -362,7 +301,6 @@ const ChatbotPage: React.FC = () => {
   const handleTopicClick = (topic: string) => {
     setSelectedTopic(topic);
     setIsTopicExpanded(true);
-    setViewMode('faq'); // Default to FAQ when clicking a topic
   };
 
   const toggleFAQ = (faqId: string) => {
@@ -431,54 +369,6 @@ const ChatbotPage: React.FC = () => {
                     )}
                   </div>
                 ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const renderThreadContent = () => {
-    if (!selectedTopic || !sampleThreads[selectedTopic]) {
-      return (
-        <div className="p-6 text-center">
-          <MessageCircle size={48} className="mx-auto text-slate-300 mb-4" />
-          <h3 className="text-lg font-medium text-slate-500 mb-2">No Threads Available</h3>
-          <p className="text-slate-400">No discussion threads found for this topic.</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="p-4">
-        {sampleThreads[selectedTopic].map(thread => (
-          <div key={thread.id} className="mb-6 bg-white rounded-lg border border-slate-200 p-4">
-            <div className="flex items-start gap-3 mb-3">
-              <img
-                src={thread.author.avatar}
-                alt={thread.author.name}
-                className="w-10 h-10 rounded-full"
-              />
-              <div>
-                <h4 className="font-medium text-slate-900">{thread.author.name}</h4>
-                <p className="text-xs text-slate-500">{thread.author.role}</p>
-              </div>
-            </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-2">{thread.title}</h3>
-            <p className="text-slate-600 mb-4">{thread.content}</p>
-            <div className="flex items-center gap-4 text-sm text-slate-500">
-              <button className="flex items-center gap-1 hover:text-blue-600">
-                <ThumbsUp size={16} />
-                <span>{thread.likes}</span>
-              </button>
-              <button className="flex items-center gap-1 hover:text-blue-600">
-                <MessageCircle size={16} />
-                <span>{thread.replies}</span>
-              </button>
-              <button className="flex items-center gap-1 hover:text-blue-600">
-                <Share2 size={16} />
-              </button>
-              <span className="ml-auto text-xs">{thread.timestamp}</span>
             </div>
           </div>
         ))}
@@ -624,37 +514,8 @@ const ChatbotPage: React.FC = () => {
 
         {isTopicExpanded ? (
           <div className="flex-1 overflow-y-auto">
-            {selectedTopic && (
-              <div className="p-4 border-b border-slate-200">
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setViewMode('faq')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      viewMode === 'faq'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    <HelpCircle size={16} className="inline mr-2" />
-                    FAQ
-                  </button>
-                  <button
-                    onClick={() => setViewMode('threads')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      viewMode === 'threads'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    <MessageCircle size={16} className="inline mr-2" />
-                    Threads
-                  </button>
-                </div>
-              </div>
-            )}
-            
             {selectedTopic ? (
-              viewMode === 'faq' ? renderFAQContent() : renderThreadContent()
+              renderFAQContent()
             ) : (
               <div className="p-6 text-center">
                 <h3 className="text-lg font-medium text-slate-500 mb-2">Select a Topic</h3>
